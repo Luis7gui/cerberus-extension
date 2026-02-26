@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Cerberus – Attention Gate",
+  "description": "A proactive attention control layer for YouTube.",
+  "version": "0.1.0",
+  "permissions": [],
+  "host_permissions": [
+    "https://www.youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": [
+        "content/content.js",
+        "ui/overlay.js"
+      ],
+      "css": ["styles/overlay.css"],
+      "run_at": "document_start"
+    }
+  ]
+}
