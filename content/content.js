@@ -1,8 +1,8 @@
-// cerberus-extension
 // content.js
 // Responsible for route validation and navigation monitoring
 
 const ALLOWED_ROUTES = [
+  "/",
   "/results",
   "/watch",
   "/feed/subscriptions"
@@ -11,8 +11,14 @@ const ALLOWED_ROUTES = [
 let isTemporarilyAllowed = false;
 let overlayReady = false;
 
+/* ============================
+   Route Logic
+============================ */
+
 function isRouteAllowed(pathname) {
-  return ALLOWED_ROUTES.some(route => pathname.startsWith(route));
+  return ALLOWED_ROUTES.some(route =>
+    pathname.startsWith(route)
+  );
 }
 
 function shouldBlock() {
@@ -21,7 +27,7 @@ function shouldBlock() {
 }
 
 function evaluateRoute() {
-  if (!overlayReady) return;
+  if (!overlayReady || !window.CerberusOverlay) return;
 
   if (shouldBlock()) {
     window.CerberusOverlay.show();
@@ -30,7 +36,10 @@ function evaluateRoute() {
   }
 }
 
-// SPA navigation interception
+/* ============================
+   SPA Navigation Interception
+============================ */
+
 function observeNavigation() {
   const pushState = history.pushState;
   const replaceState = history.replaceState;
@@ -51,7 +60,17 @@ function observeNavigation() {
     resetTemporaryPermission();
     setTimeout(evaluateRoute, 50);
   });
+
+  // YouTube internal SPA navigation
+  window.addEventListener("yt-navigate-finish", () => {
+    resetTemporaryPermission();
+    setTimeout(evaluateRoute, 50);
+  });
 }
+
+/* ============================
+   Temporary Permission
+============================ */
 
 function resetTemporaryPermission() {
   isTemporarilyAllowed = false;
@@ -59,13 +78,22 @@ function resetTemporaryPermission() {
 
 window.CerberusAllowTemporarily = function () {
   isTemporarilyAllowed = true;
-  window.CerberusOverlay.hide();
+  if (window.CerberusOverlay) {
+    window.CerberusOverlay.hide();
+  }
 };
 
-// Wait for overlay to be ready
+/* ============================
+   Overlay Ready Listener
+============================ */
+
 window.addEventListener("cerberus:overlay-ready", () => {
   overlayReady = true;
   evaluateRoute();
 });
+
+/* ============================
+   Init
+============================ */
 
 observeNavigation();
